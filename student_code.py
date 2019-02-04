@@ -122,41 +122,46 @@ class KnowledgeBase(object):
         Args:
             fact (Fact)
         """
-        # Iterate through fact's supported_facts
-        # For every f in supported_facts, remove original fact from f's supported_by
+        if isinstance(fact, Fact):
+            if not fact.supported_by:
+                for f in fact.supports_facts:
+                    for fr in f.supported_by:
+                        if fact in fr:
+                            f.supported_by.remove(fr)
+                    self.kb_retract_helper(f) 
+                for r in fact.supports_rules:
+                    for fr in r.supported_by:
+                        if fact in fr:
+                            r.supported_by.remove(fr)
+                    self.kb_retract_helper(r)
+                # Remove fact itself from kb
+                self.facts.remove(fact)
+            else:
+                if fact.asserted == True:
+                    fact.asserted = False
 
-        for f in fact.supports_facts:
-            newList = list()
-            
-            for pair in f.supported_by:
-                if pair[0] == fact:
-                    pass
-                else:
-                    newList.append(pair)
-            f.supported_by = newList
+        else:
+            if not fact.supported_by:
+                for f in fact.supports_facts:
+                    for fr in f.supported_by:
+                        if fact in fr:
+                            f.supported_by.remove(fr)
+                    self.kb_retract_helper(f) 
 
-            if f.asserted == False and not f.supported_by:
-                self.kb_retract_helper(f)
+            # Iterate through fact's supported_rules
+            # For every r in supported_rules, check if rule is supported by other things
+            # If supported by other facts, keep it. If not, remove the rule
+                for r in fact.supports_rules:
+                    for fr in r.supported_by:
+                        if fact in fr:
+                            r.supported_by.remove(fr)
+                    self.kb_retract_helper(r)
+        
+                self.rules.remove(fact)
 
-        # Iterate through fact's supported_rules
-        # For every r in supported_rules, check if rule is supported by other things
-        # If supported by other facts, keep it. If not, remove the rule
-        for r in fact.supports_rules:
-            newList2 = list()
-            for pair2 in r.supported_by:
-                if pair2[0] == fact:
-                    # Remove a rule only if it is both not asserted and has no other support 
-                    if len(pair2[1].supported_by) <= 1 and pair2[1].asserted == False:
-                        pass
-                    else:
-                        newList2.append(pair2)
-                else:
-                    newList2.append(pair2)
-            r.supported_by = newList2
-            
-        # Remove fact itself from kb
-        self.facts.remove(fact)
-
+            else:
+                if fact.asserted == True:
+                    fact.asserted = False    
 
     def kb_retract(self, fact_or_rule): 
         """Retract a fact from the KB
@@ -179,26 +184,12 @@ class KnowledgeBase(object):
         #   - Rule - nothing happens
 
         # Checking if arg is Fact
-        if isinstance(fact_or_rule, Fact):
+        if isinstance(fact_or_rule, Fact) and fact_or_rule in self.facts:
             fact = self._get_fact(fact_or_rule)
-            # Checking asserted fact or not
-            if fact.asserted == True:
-                
-                # Checking if supported or not:
-                if not fact.supported_by:
-                    # If no support, remove its support from its associated. Use helper
-                    self.kb_retract_helper(fact)
-                else:
-                    # If has support, just change to inferred
-                    fact.asserted = False
-
-            else:
-                # Inferred, do nothign
-                pass
-
+            self.kb_retract_helper(fact)
         # If not a Fact, do nothing
         else:
-            rule = self._get_rule(fact_or_rule)
+            #rule = self._get_rule(fact_or_rule)
             pass
 
 
@@ -221,28 +212,27 @@ class InferenceEngine(object):
         
         bindings = match(fact.statement, rule.lhs[0])
         supported_by = [[fact, rule]]
-        if bindings is not False:
+        if bindings:
             new_statement = instantiate(rule.rhs, bindings)
 
             # Rule has 1 statement --> new Fact can be made
             if len(rule.lhs) == 1:
                 new_fact = Fact(new_statement, supported_by)
+                kb.kb_add(new_fact)
+                new_fact = kb._get_fact(new_fact)
                 fact.supports_facts.append(new_fact)
                 rule.supports_facts.append(new_fact)
-                kb.kb_assert(new_fact)
+                
 
-            # Rule has multiple statements --> new Rule can be made with remaining 
-            # LHS statements of old rule
+            # Rule has multiple statements --> new Rule can be made with remaining LHS statements of old rule
             else:
-                new_lhs = list()
-                for i in range(len(rule.lhs)):
-                    if i == 0:
-                        continue
-
+                new_lhs = []
+                for i in range(1, len(rule.lhs)):
                     new_lhs.append(instantiate(rule.lhs[i], bindings))
 
                 new_rule = Rule([new_lhs, new_statement], supported_by)
+                kb.kb_add(new_rule)
+                new_rule = kb._get_rule(new_rule)
                 fact.supports_rules.append(new_rule)
                 rule.supports_rules.append(new_rule)
-                kb.kb_assert(new_rule)
 

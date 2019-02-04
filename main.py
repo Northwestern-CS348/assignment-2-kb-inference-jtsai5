@@ -81,12 +81,13 @@ class KBTest(unittest.TestCase):
         ask1 = read.parse_input("fact: (isliterally ?X TonyStark)")
         print(' Asking if', ask1)
         answer = self.KB.kb_ask(ask1)
+        print answer
         self.assertEqual(str(answer[0]), "?X : profHammond")
         ask2 = read.parse_input("fact: (resembles profHammond ?Y)")
         print(' Asking if', ask2)
         answer = self.KB.kb_ask(ask2)
+        print answer
         self.assertFalse(answer)
-
     def test7(self):
         """this student generated test ensures retracting the 2nd fact in the lhs of a rule
         successfully retracts the final inferred fact but re-assertion re-infers the fact
@@ -186,6 +187,8 @@ class KBTest(unittest.TestCase):
         self.assertEqual(len(answer), 0)
         # self.assertEqual(str(answer[1]), "?X : chen")
 
+
+   
 def pprint_justification(answer):
     """Pretty prints (hence pprint) justifications for the answer.
     """

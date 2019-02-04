@@ -14,7 +14,19 @@ class KBTest(unittest.TestCase):
         for item in data:
             if isinstance(item, Fact) or isinstance(item, Rule):
                 self.KB.kb_assert(item)
-        
+        # for my own tests
+        file = 'statements_kb5.txt'
+        data = read.read_tokenize(file)
+        for item in data:
+            if isinstance(item, Fact) or isinstance(item, Rule):
+                self.KB.kb_assert(item)
+        # for test11
+        file = 'statements_kb6.txt'
+        data = read.read_tokenize(file)
+        for item in data:
+            if isinstance(item, Fact) or isinstance(item, Rule):
+                self.KB.kb_assert(item)
+            
     def test1(self):
         # Did the student code contain syntax errors, AttributeError, etc.
         ask1 = read.parse_input("fact: (motherof ada ?X)")
@@ -81,13 +93,12 @@ class KBTest(unittest.TestCase):
         ask1 = read.parse_input("fact: (isliterally ?X TonyStark)")
         print(' Asking if', ask1)
         answer = self.KB.kb_ask(ask1)
-        print answer
         self.assertEqual(str(answer[0]), "?X : profHammond")
         ask2 = read.parse_input("fact: (resembles profHammond ?Y)")
         print(' Asking if', ask2)
         answer = self.KB.kb_ask(ask2)
-        print answer
         self.assertFalse(answer)
+
     def test7(self):
         """this student generated test ensures retracting the 2nd fact in the lhs of a rule
         successfully retracts the final inferred fact but re-assertion re-infers the fact
@@ -114,7 +125,7 @@ class KBTest(unittest.TestCase):
         r1 = read.parse_input("fact: (techgenius profHammond)")
         print(' Retracting', r1)
         self.KB.kb_retract(r1)
-        r2 = read.parse_input("fact: (talkslike profHammond)")
+        r2 = read.parse_input("fact: (talkslike profHammond TonyStark)")
         print(' Retracting', r2)
         self.KB.kb_retract(r2)
         ask1 = read.parse_input("fact: (isliterally ?X TonyStark)")
@@ -160,12 +171,13 @@ class KBTest(unittest.TestCase):
         print(' Asking if', ask3)
         answer = self.KB.kb_ask(ask3)
         self.assertEqual(str(answer[0]), "?X : profHammond")
-        
     def test11(self):
         # makes sure retract does not retract supported fact
         ask1 = read.parse_input("fact: (grandparent A ?X)")
         print(' Asking if', ask1)
         answer = self.KB.kb_ask(ask1)
+        #print "before"
+        print answer
         self.assertEqual(str(answer[0]), "?X : C")
         # self.assertEqual(str(answer[1]), "?X : chen")
 

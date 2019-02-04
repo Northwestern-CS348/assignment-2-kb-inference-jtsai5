@@ -12,6 +12,7 @@ class Fact(object):
             inferred from other rules/facts in the KB
         supported_by (listof Fact|Rule): Facts/Rules that allow inference of
             the statement
+            # List of pairs
         supports_facts (listof Fact): Facts that this fact supports
         supports_rules (listof Rule): Rules that this fact supports
     """
